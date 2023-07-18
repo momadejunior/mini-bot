@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mini Chatbot - Chat</title>
+  <style>
+    .chat-bubble {
+      margin: 5px;
+      padding: 10px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+
+    .user {
+      background-color: lightblue;
+    }
+
+    .bot {
+      background-color: lightgreen;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini Chatbot - Chat</h1>
+  <div id="chat-container"></div>
+  <input type="text" id="user-input" placeholder="Digite sua mensagem...">
+  <button onclick="sendMessage()">Enviar</button>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.7/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.7/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.7/firebase-auth.js"></script>
+  <script>
+    // Configurar a inicialização do Firebase com as credenciais do seu projeto
+    const firebaseConfig = {
+    apiKey: "AIzaSyB9WDZnhjGzzjm66flZUmoHDQq6tdZDmsA",
+    authDomain: "chatbot-93051.firebaseapp.com",
+    projectId: "chatbot-93051",
+    storageBucket: "chatbot-93051.appspot.com",
+    messagingSenderId: "910650346544",
+    appId: "1:910650346544:web:a632788aa15a6b3e9471f5",
+    measurementId: "G-TK65S06RH0"
+  };
+
+    firebase.initializeApp(firebaseConfig);
+
+    // Obter referências aos elementos HTML
+    const userInput = document.getElementById("user-input");
+    const chatContainer = document.getElementById("chat-container");
+
+    // Obter uma referência ao nó "messages" no Firebase Realtime Database
+    const messagesRef = firebase.database().ref("messages");
+
+    // Registrar um ouvinte para receber novas mensagens do chatbot e admin
+    messagesRef.on("child_added", (snapshot) => {
+      const message = snapshot.val();
+
+      // Verifica se a mensagem foi enviada pelo admin
+      if (message.sender === "admin") {
+        // Cria a mensagem do admin no chat
+        const adminChatBubble = document.createElement("div");
+        adminChatBubble.className = "chat-bubble admin";
+        adminChatBubble.innerText = message.text;
+        chatContainer.appendChild(adminChatBubble);
+      }
+    });
+
+    // Função para enviar a mensagem do usuário
+    function sendMessage() {
+      const userMessage = userInput.value;
+
+      // Cria a mensagem do usuário no chat
+      const userChatBubble = document.createElement("div");
+      userChatBubble.className = "chat-bubble user";
+      userChatBubble.innerText = userMessage;
+      chatContainer.appendChild(userChatBubble);
+
+      // Limpa a entrada do usuário
+      userInput.value = "";
+
+      // Salva a mensagem do usuário no Firebase Realtime Database
+      messagesRef.push({ sender: "user", text: userMessage });
+
+      // Envia a mensagem do usuário para a página do admin
+      window.postMessage({ sender: "user", text: userMessage }, "*");
+    }
+
+    // Ouve o evento de mensagens do admin enviadas por outra janela
+    window.addEventListener("message", (event) => {
+      const message = event.data;
+
+      // Verifica se a mensagem foi enviada pelo admin
+      if (message.sender === "admin") {
+        // Cria a mensagem do admin no chat
+        const adminChatBubble = document.createElement("div");
+        adminChatBubble.className = "chat-bubble admin";
+        adminChatBubble.innerText = message.text;
+        chatContainer.appendChild(adminChatBubble);
+      }
+    });
+  </script>
+</body>
+</html>
